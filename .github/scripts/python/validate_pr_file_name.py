@@ -16,7 +16,7 @@ def get_expected_filename(filename, pr_creator):
         return 'testnet'
     else:
         raise InvalidPR(
-            'The entity file is expected to be named %s or %s. Please rename it' % expected_testnet_filename, expected_mainnet_filename
+            'The entity file is expected to be named %s or %s. Your filename is %s Please rename it' % (expected_testnet_filename, expected_mainnet_filename, filename)
         )
 
 
