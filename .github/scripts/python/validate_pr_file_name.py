@@ -35,7 +35,7 @@ def validate_pull_request(gh, repo, pr_number):
         )
 
     for changed_file in changed_files:
-        _ = get_expected_filename(changed_file)
+        _ = get_expected_filename(changed_file, pr_creator)
 
 
 def main():
