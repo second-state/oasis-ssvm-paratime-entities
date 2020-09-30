@@ -11,8 +11,10 @@ def get_expected_filename(filename, pr_creator):
     expected_mainnet_filename = "mainnet/%s-entity.json" % pr_creator
 
     if (filename == expected_mainnet_filename):
+        print('Submit mainnet entity %s ', filename)
         return 'mainnet'
     elif (filename == expected_testnet_filename):
+        print('Submit testnet entity %s ', filename)
         return 'testnet'
     else:
         raise InvalidPR(
@@ -35,7 +37,7 @@ def validate_pull_request(gh, repo, pr_number):
         )
 
     for changed_file in changed_files:
-        _ = get_expected_filename(changed_file, pr_creator)
+        _ = get_expected_filename(changed_file.filename, pr_creator)
 
 
 def main():
