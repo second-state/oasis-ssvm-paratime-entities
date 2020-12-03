@@ -45,8 +45,9 @@ def print_tx(args):
       --signer.dir $ENTITY_DIR \\
       --runtime.id $RUNTIME_ID \\
       --runtime.kind compute \\
-      --runtime.executor.group_size 1 \\
-      --runtime.storage.group_size 1 \\
+      --runtime.executor.group_size 2 \\
+      --runtime.storage.group_size 2 \\
+      --runtime.storage.min_write_replication 2 \\
       --runtime.admission_policy entity-whitelist \\
       --runtime.admission_policy_entity_whitelist $ENTITY_ID \\
       --runtime.genesis.state ../etc/oasis_genesis_testing_21m.json \\
