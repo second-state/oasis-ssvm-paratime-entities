@@ -45,12 +45,12 @@ def print_tx(args):
       --signer.dir $ENTITY_DIR \\
       --runtime.id $RUNTIME_ID \\
       --runtime.kind compute \\
-      --runtime.executor.group_size 2 \\
-      --runtime.storage.group_size 2 \\
-      --runtime.storage.min_write_replication 2 \\
+      --runtime.executor.group_size 5 \\
+      --runtime.storage.group_size 5 \\
+      --runtime.storage.min_write_replication 5 \\
       --runtime.admission_policy entity-whitelist \\
       --runtime.admission_policy_entity_whitelist $ENTITY_ID \\
-      --runtime.genesis.state ../etc/oasis_genesis_testing_21m.json \\
+      --runtime.genesis.state ../etc/oasis_genesis_mainnet_testing_ff03.json \\
       --runtime.txn_scheduler.flush_timeout 1s \\
       --runtime.txn_scheduler.max_batch_size 10000 \\
       --runtime.txn_scheduler.max_batch_size_bytes 16mb \\
