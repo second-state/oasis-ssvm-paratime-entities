@@ -20,10 +20,8 @@ def get_entity_ids(p):
         if f == '.gitkeep':
             continue
         fullpath = join(p, f)
-        print(fullpath)
         entity = open(fullpath)
         entity_json = json.load(entity)
-        print(entity_json)
         entity_id.append(entity_json['OasisEntityID'])
     return ','.join(entity_id)
 
@@ -45,12 +43,14 @@ def print_tx(args):
       --signer.dir $ENTITY_DIR \\
       --runtime.id $RUNTIME_ID \\
       --runtime.kind compute \\
-      --runtime.executor.group_size 2 \\
+      --runtime.executor.group_size 3 \\
+      --runtime.executor.group_backup_size 5 \\
+      --runtime.executor.allowed_stragglers 1 \\
       --runtime.storage.group_size 2 \\
       --runtime.storage.min_write_replication 2 \\
       --runtime.admission_policy entity-whitelist \\
       --runtime.admission_policy_entity_whitelist $ENTITY_ID \\
-      --runtime.genesis.state ../etc/oasis_genesis_testing_21m.json \\
+      --runtime.genesis.state ../etc/oasis_genesis_mainnet_testing_ff03.json \\
       --runtime.txn_scheduler.flush_timeout 1s \\
       --runtime.txn_scheduler.max_batch_size 10000 \\
       --runtime.txn_scheduler.max_batch_size_bytes 16mb \\
