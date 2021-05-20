@@ -6,6 +6,77 @@ from argparse import ArgumentParser
 from enum import Enum
 import json
 
+runtime_descriptor_json = """
+{
+  "v": 2,
+  "id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wQ=",
+  "entity_id": "RDCyARTIdpiG75L9vVXAYIhRCToSrchZkv3JUW3Pji8=",
+  "genesis": {
+    "state_root": "F6lrOmNtgvH67OP3C6SkZrUi503CCT8j9jwFNYt0Ock=",
+    "state": null,
+    "storage_receipts": [{"public_key":"ovfRyilgOa65klzkJtwpSNnLqqstJFFJ5AZbAbtOWHg=","signature":"sDoGwrxXUZnJ/KUF2Fy0x4BwzPJ/Gcu03oSeLMLf1L6BHRp3p5ynbRdmyBmss44DWnq1UcfvaeduYD+nTMluDw=="}],
+    "round": 44848
+  },
+  "kind": 1,
+  "tee_hardware": 0,
+  "versions": {
+    "version": {}
+  },
+  "executor": {
+    "group_size": 2,
+    "group_backup_size": 0,
+    "allowed_stragglers": 0,
+    "round_timeout": 5,
+    "max_messages": 32
+  },
+  "txn_scheduler": {
+    "algorithm": "simple",
+    "batch_flush_timeout": 1000000000,
+    "max_batch_size": 10000,
+    "max_batch_size_bytes": 16777216,
+    "propose_batch_timeout": 5
+  },
+  "storage": {
+    "group_size": 2,
+    "min_write_replication": 2,
+    "max_apply_write_log_entries": 100000,
+    "max_apply_ops": 2,
+    "checkpoint_interval": 1000,
+    "checkpoint_num_kept": 5,
+    "checkpoint_chunk_size": 16777216
+  },
+  "admission_policy": {
+    "entity_whitelist": {
+      "entities": {
+      }
+    }
+  },
+  "constraints": {
+    "executor": {
+      "backup-worker": {
+        "min_pool_size": {
+          "limit": 0
+        }
+      },
+      "worker": {
+        "min_pool_size": {
+          "limit": 2
+        }
+      }
+    },
+    "storage": {
+      "worker": {
+        "min_pool_size": {
+          "limit": 2
+        }
+      }
+    }
+  },
+  "staking": {},
+  "governance_model": "entity"
+}
+"""
+
 class Network(Enum):
     mainnet = "mainnet"
     testnet = "testnet"
@@ -23,43 +94,33 @@ def get_entity_ids(p):
         entity = open(fullpath)
         entity_json = json.load(entity)
         entity_id.append(entity_json['OasisEntityID'])
-    return ','.join(entity_id)
+    return entity_id
 
 def print_tx(args):
+    runtime_descriptor = json.loads(runtime_descriptor_json)
+    for entity in get_entity_ids(args.network):
+        runtime_descriptor['admission_policy']['entity_whitelist']['entities'][entity] = {}
+    with open(args.runtime_descriptor, 'w') as f:
+        f.write(json.dumps(runtime_descriptor, sort_keys=True, indent=2))
+
     output = f"""
-    export ENTITY_DIR={args.entity_dir}
-    export ENTITY_ID={get_entity_ids(args.network)}
-    export GENESIS_JSON={args.genesis_json}
-    export RUNTIME_ID={args.runtime_id}
-    export NONCE={args.nonce}
-    cd {args.data_dir}
-    ../oasis-node registry runtime gen_register -y \\
-      --transaction.fee.gas 10000 \\
-      --transaction.fee.amount 0 \\
-      --transaction.file register_runtime.tx \\
-      --transaction.nonce $NONCE \\
-      --genesis.file $GENESIS_JSON \\
-      --signer.backend file \\
-      --signer.dir $ENTITY_DIR \\
-      --runtime.id $RUNTIME_ID \\
-      --runtime.kind compute \\
-      --runtime.executor.group_size 3 \\
-      --runtime.executor.group_backup_size 5 \\
-      --runtime.executor.allowed_stragglers 1 \\
-      --runtime.storage.group_size 2 \\
-      --runtime.storage.min_write_replication 2 \\
-      --runtime.admission_policy entity-whitelist \\
-      --runtime.admission_policy_entity_whitelist $ENTITY_ID \\
-      --runtime.genesis.state ../etc/oasis_genesis_mainnet_testing_ff03.json \\
-      --runtime.txn_scheduler.flush_timeout 1s \\
-      --runtime.txn_scheduler.max_batch_size 10000 \\
-      --runtime.txn_scheduler.max_batch_size_bytes 16mb \\
-      --runtime.storage.checkpoint_chunk_size 16777216 \\
-      --runtime.storage.checkpoint_interval 1000 \\
-      --runtime.storage.checkpoint_num_kept 5
-    ../oasis-node consensus submit_tx --transaction.file register_runtime.tx
-    rm -f register_runtime.tx
-    """
+cd {args.data_dir}
+export GENESIS_JSON={args.genesis_json}
+export NONCE={args.nonce}
+export ENTITY_DIR={args.entity_dir}
+export RUNTIME_DESCRIPTOR={args.runtime_descriptor}
+../oasis-node-v21.1.2 registry runtime gen_register -y \\
+    --transaction.fee.gas 10000 \\
+    --transaction.fee.amount 0 \\
+    --transaction.file register_runtime.tx \\
+    --transaction.nonce $NONCE \\
+    --genesis.file $GENESIS_JSON \\
+    --signer.backend file \\
+    --signer.dir $ENTITY_DIR \\
+    --runtime.descriptor $RUNTIME_DESCRIPTOR
+../oasis-node consensus submit_tx --transaction.file register_runtime.tx
+rm -f register_runtime.tx
+"""
     print(output)
 
 def main():
@@ -68,7 +129,7 @@ def main():
     parser.add_argument("nonce", help="Set tx nonce", type=int)
     parser.add_argument("entity_dir", help="Your entity dir", type=str)
     parser.add_argument("genesis_json", help="Your genesis json file", type=str)
-    parser.add_argument("runtime_id", help="Runtime id", type=str)
+    parser.add_argument("runtime_descriptor", help="Runtime descriptor file output path", type=str)
     parser.add_argument("data_dir", help="Your data dir", type=str)
 
     args = parser.parse_args()
